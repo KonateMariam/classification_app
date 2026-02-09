@@ -6,6 +6,8 @@ from torchvision import transforms
 from PIL import Image
 import pandas as pd
 from model import ViTClassifier
+import numpy as np
+
 
 # ==================================================
 # CONFIG STREAMLIT
@@ -83,6 +85,18 @@ transform = transforms.Compose([
     )
 ])
 
+def is_likely_coffee_leaf(image):
+    img = np.array(image)
+
+    r, g, b = img[:, :, 0], img[:, :, 1], img[:, :, 2]
+
+    # Détection simple du vert dominant
+    green_mask = (g > r) & (g > b)
+
+    green_ratio = green_mask.mean()
+
+    return green_ratio > 0.20
+
 # ==================================================
 # SIDEBAR
 # ==================================================
@@ -92,7 +106,7 @@ menu = st.sidebar.radio(
 )
 
 # ==================================================
-# ACCUEIL (CORRIGÉ)
+# ACCUEIL
 # ==================================================
 if menu == "🏠 Accueil":
     st.title("🌿 Classification intelligente des feuilles de caféier Robusta")
@@ -153,6 +167,14 @@ elif menu == "🔍 Prédiction":
         st.image(image, use_container_width=True)
 
         if st.button(" Lancer la prédiction"):
+
+            # Vérification : est-ce une feuille ?
+            if not is_likely_coffee_leaf(image):
+                st.warning("⚠️ L'image ne correspond pas à une feuille de caféier Robusta.")
+                st.write("Veuillez charger une image claire d'une feuille de caféier.")
+                st.stop()
+
+            # Prédiction normale
             img_tensor = transform(image).unsqueeze(0).to(DEVICE)
 
             with torch.no_grad():
@@ -196,7 +218,7 @@ elif menu == "👩‍🎓 Auteurs":
         <div class="card author-card">
         <h3>Konaté Mariam</h3>
         <p><b>Spécialité :</b> Data Science / Data Analyst</p>
-        <p><b>Université :</b> UFHB</p>
+        <p><b>Université :</b> UFHB-cocody</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -205,7 +227,7 @@ elif menu == "👩‍🎓 Auteurs":
         <div class="card author-card">
         <h3>Danho Amon Elisabeth Tania</h3>
         <p><b>Spécialité :</b> Data Science / Deep Learning</p>
-        <p><b>Université :</b> UFHB</p>
+        <p><b>Université :</b> UFHB- cocody</p>
         </div>
         """, unsafe_allow_html=True)
 
